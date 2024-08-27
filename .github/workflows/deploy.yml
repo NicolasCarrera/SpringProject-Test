@@ -34,10 +34,11 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Set up kubectl
-        uses: aws-actions/configure-kubectl@v1
+        uses: aws-actions/eks-kubectl-action@v1
         with:
           cluster-name: ${{ secrets.EKS_CLUSTER_NAME }}
           role-arn: ${{ secrets.EKS_ROLE_ARN }}
+          region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to EKS
         run: |
