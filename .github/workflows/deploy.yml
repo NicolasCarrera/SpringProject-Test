@@ -21,7 +21,7 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean package
-        
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -34,9 +34,12 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build and push Docker image to ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest .
-          docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
       - name: Deploy to AWS Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v20
@@ -46,5 +49,5 @@ jobs:
           application_name: "your-eb-application-name"
           environment_name: "your-eb-environment-name"
           version_label: ${{ github.sha }}
-          region: "your-aws-region"
+          region: ${{ secrets.AWS_REGION }}
           s3_bucket: "your-eb-s3-bucket"
