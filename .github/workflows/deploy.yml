@@ -38,13 +38,9 @@ jobs:
           docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest .
           docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
 
-      - name: Deploy to AWS Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v20
+      - name: Set up kubectl
+        uses: aws-actions/configure-kubectl@v1
         with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-          application_name: "your-eb-application-name"
-          environment_name: "your-eb-environment-name"
-          version_label: ${{ github.sha }}
-          region: ${{ secrets.AWS_REGION }}
-          s3_bucket: "your-eb-s3-bucket"
+          cluster-name: ${{ secrets.EKS_CLUSTER_NAME }}
+          role-arn: ${{ secrets.EKS_ROLE_ARN }}
+          
