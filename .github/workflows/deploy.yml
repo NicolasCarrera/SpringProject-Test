@@ -45,10 +45,26 @@ jobs:
 
       - name: Connect to EC2 and deploy Docker container
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2-ssh.pem ec2-user@<EC2_PUBLIC_DNS> << EOF
+          ssh -o StrictHostKeyChecking=no -i ec2-ssh.pem ec2-user@${{ secrets.EC2_PUBLIC_DNS }} << 'EOF'
+            # Configura AWS CLI
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
+            aws configure set region ${{ secrets.AWS_REGION }}
+            aws configure set output json
+
+            # Autentica Docker con ECR
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+
+            # Detiene y elimina todos los contenedores
+            docker stop $(docker ps -q) || true
+            docker rm $(docker ps -a -q) || true
+
+            # Elimina todas las imágenes
+            docker rmi $(docker images -q) || true
+
+            # Descarga la Imagen desde ECR
             docker pull ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
-            docker stop my-app-container || true  # Detiene cualquier contenedor en ejecución con el mismo nombre
-            docker rm my-app-container || true  # Elimina cualquier contenedor existente con el mismo nombre
-            docker run -d --name my-app-container -p 80:8080 ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+            # Ejecuta el nuevo contenedor
+            docker run -d --name my-app-container -p 8080:8080 ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
           EOF
