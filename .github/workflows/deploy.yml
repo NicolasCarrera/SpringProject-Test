@@ -37,3 +37,18 @@ jobs:
         run: |
           docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest .
           docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ec2-ssh.pem
+          chmod 400 ec2-ssh.pem
+
+      - name: Connect to EC2 and deploy Docker container
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2-ssh.pem ec2-user@<EC2_PUBLIC_DNS> << EOF
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            docker pull ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+            docker stop my-app-container || true  # Detiene cualquier contenedor en ejecución con el mismo nombre
+            docker rm my-app-container || true  # Elimina cualquier contenedor existente con el mismo nombre
+            docker run -d --name my-app-container -p 80:8080 ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+          EOF
