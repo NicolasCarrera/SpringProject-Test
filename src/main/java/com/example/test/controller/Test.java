@@ -9,8 +9,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/test")
 @CrossOrigin(origins = "*")
 public class Test {
-    @GetMapping
-    public String test() {
+    @GetMapping("/jorge")
+    public String hola1() {
         return "Hola Jorge Cruceta!!";
+    }
+
+    @GetMapping("/cris")
+    public String hola2() {
+        return "Hola bb!!";
+    }
+
+    @GetMapping("/nico")
+    public String hola3() {
+        return "Hola nico-nico-ni!!";
     }
 }
